@@ -11,6 +11,7 @@ pub mod pix_fmt;
 pub mod read_until_any;
 pub mod stream;
 pub mod version;
+pub mod raw_frames;
 
 #[cfg(test)]
 mod test;

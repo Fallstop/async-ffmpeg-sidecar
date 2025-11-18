@@ -1,6 +1,6 @@
 //! A stream of events from an Ffmpeg process.
 
-use crate::event::{FfmpegProgress, LogLevel};
+use crate::event::{FfmpegProgress, LogLevel, OutputVideoFrame};
 use crate::{
   child::FfmpegChild, event::FfmpegEvent, log_parser::FfmpegLogParser, metadata::FfmpegMetadata,
 };
@@ -9,13 +9,13 @@ use futures_util::{Stream, StreamExt};
 use std::future::Future;
 use std::pin::Pin;
 use std::task::Poll;
-use tokio::{io::BufReader, pin, process::ChildStderr};
+use tokio::{io::BufReader, pin, process::{ChildStderr,ChildStdout}};
 
 pub struct FfmpegEventStream {
   metadata: FfmpegMetadata,
   // stderr: ChildStderr,
   log_parser: FfmpegLogParser<BufReader<ChildStderr>>,
-  // stdout: Option<ChildStdout>,
+  stdout: Option<ChildStdout>,
   // err: bool,
 }
 
@@ -24,12 +24,12 @@ impl FfmpegEventStream {
     let stderr = child.take_stderr().context("no stderr channel")?;
     let reader = BufReader::new(stderr);
     let parser = FfmpegLogParser::new(reader);
-    // let stdout = child.take_stdout();
+    let stdout = child.take_stdout();
 
     Ok(Self {
       metadata: FfmpegMetadata::new(),
       log_parser: parser,
-      // stdout,
+      stdout,
       // err: false,
     })
   }
@@ -82,6 +82,17 @@ impl FfmpegEventStream {
       })
     })
   }
+
+  /// Filter out all events except for output frames (`FfmpegEvent::OutputFrame`).
+  pub fn filter_frames(self) -> impl Stream<Item = OutputVideoFrame> {
+    self.filter_map(|event| {
+      futures::future::ready(match event {
+        FfmpegEvent::OutputFrame(o) => Some(o),
+        _ => None,
+      })
+    })
+  }
+
 }
 
 impl Stream for FfmpegEventStream {

@@ -15,8 +15,8 @@ pub enum FfmpegEvent {
   /// An error that didn't originate from the ffmpeg logs
   Error(String),
   Progress(FfmpegProgress),
-  // Not parsing output frames for now
-  // OutputFrame(OutputVideoFrame),
+  // Parsing frames are in testing
+  OutputFrame(OutputVideoFrame),
   /// A chunk of data that may not correspond to a complete frame.
   /// For examples, it may contain encoded h264.
   /// These chunks will need to be handled manually, or piped directly to
@@ -180,35 +180,35 @@ pub struct FfmpegProgress {
   pub raw_log_message: String,
 }
 
-// #[derive(Clone, PartialEq)]
-// pub struct OutputVideoFrame {
-//     /// The width of this video frame in pixels
-//     pub width: u32,
-//     /// The height of this video frame in pixels
-//     pub height: u32,
-//     /// The pixel format of the video frame, corresponding to the chosen
-//     /// `-pix_fmt` FFmpeg parameter.
-//     pub pix_fmt: String,
-//     /// The index of the FFmpeg output stream that emitted this frame.
-//     /// In a typical case, there is only one output stream and this will be 0.
-//     pub output_index: u32,
-//     /// Raw image frame data. The layout of the pixels in memory depends on
-//     /// `width`, `height`, and `pix_fmt`.
-//     pub data: Vec<u8>,
-//     /// Index of current frame, starting at 0 and monotonically increasing by 1
-//     pub frame_num: u32,
-//     /// Output frame timestamp in seconds
-//     pub timestamp: f32,
-// }
+#[derive(Clone, PartialEq)]
+pub struct OutputVideoFrame {
+    /// The width of this video frame in pixels
+    pub width: u32,
+    /// The height of this video frame in pixels
+    pub height: u32,
+    /// The pixel format of the video frame, corresponding to the chosen
+    /// `-pix_fmt` FFmpeg parameter.
+    pub pix_fmt: String,
+    /// The index of the FFmpeg output stream that emitted this frame.
+    /// In a typical case, there is only one output stream and this will be 0.
+    pub output_index: u32,
+    /// Raw image frame data. The layout of the pixels in memory depends on
+    /// `width`, `height`, and `pix_fmt`.
+    pub data: Vec<u8>,
+    /// Index of current frame, starting at 0 and monotonically increasing by 1
+    pub frame_num: u32,
+    /// Output frame timestamp in seconds
+    pub timestamp: f32,
+}
 
-// impl std::fmt::Debug for OutputVideoFrame {
-//     /// Omit the `data` field form the debug output
-//     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-//         f.debug_struct("OutputVideoFrame")
-//             .field("width", &self.width)
-//             .field("height", &self.height)
-//             .field("pix_fmt", &self.pix_fmt)
-//             .field("output_index", &self.output_index)
-//             .finish()
-//     }
-// }
+impl std::fmt::Debug for OutputVideoFrame {
+    /// Omit the `data` field form the debug output
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        f.debug_struct("OutputVideoFrame")
+            .field("width", &self.width)
+            .field("height", &self.height)
+            .field("pix_fmt", &self.pix_fmt)
+            .field("output_index", &self.output_index)
+            .finish()
+    }
+}
